@@ -4,6 +4,7 @@
 # Enable import from parent package
 import sys
 import os
+import torch.nn as nn
 sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 
 import dataio, meta_modules, utils, training, loss_functions, modules
@@ -45,6 +46,7 @@ if opt.model_type == 'nerf':
     model = modules.SingleBVPNet(type='relu', mode='nerf', in_features=3)
 else:
     model = modules.SingleBVPNet(type=opt.model_type, in_features=3)
+model=nn.DataParallel(model)
 model.cuda()
 
 # Define the loss
