@@ -48,9 +48,9 @@ def create_multi_mesh(
 
         while head < num_samples:
             print(head)
-            sample_subset = samples[head : min(head + max_batch, num_samples), 0:3].cuda()
-            
-            import pdb; pdb.set_trace
+            sample_subset = samples[head : min(head + max_batch, num_samples), 0:3]
+            shape_tensor=[[latent]]*len(sample_subset)
+            sample_subset = torch.FloatTensor(np.concatenate((shape_tensor,sample_subset),axis=1)).cuda()
             samples[head : min(head + max_batch, num_samples), 3] = (
                 decoder(sample_subset)
                 .squeeze()#.squeeze(1)
