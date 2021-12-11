@@ -46,7 +46,7 @@ if opt.model_type == 'nerf':
     model = modules.SingleBVPNet(type='relu', mode='nerf', in_features=3)
 else:
     model = modules.SingleBVPNet(type=opt.model_type, in_features=3)
-model=nn.DataParallel(model)
+
 model.cuda()
 
 # Define the loss
