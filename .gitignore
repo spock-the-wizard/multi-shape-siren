@@ -2,3 +2,5 @@
 .vscode/
 data/interior_room.xyz
 data/thai_statue.xyz
+__pycache__/
+logs/

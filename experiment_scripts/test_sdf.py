@@ -52,4 +52,6 @@ sdf_decoder = SDFDecoder()
 root_path = os.path.join(opt.logging_root, opt.experiment_name)
 utils.cond_mkdir(root_path)
 
-sdf_meshing.create_mesh(sdf_decoder, os.path.join(root_path, 'test'), N=opt.resolution)
+epoch=opt.checkpoint_path.split('/')[-1].split('.')[0].split('_')[2]
+
+sdf_meshing.create_mesh(sdf_decoder, os.path.join(root_path, 'reconstruction_epoch_{}_res_{}'.format(epoch,opt.resolution)), N=opt.resolution)
