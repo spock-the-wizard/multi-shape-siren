@@ -24,7 +24,7 @@ p.add_argument('--lr', type=float, default=1e-4, help='learning rate. default=5e
 p.add_argument('--num_epochs', type=int, default=10000,
                help='Number of epochs to train for.')
 
-p.add_argument('--epochs_til_ckpt', type=int, default=1,
+p.add_argument('--epochs_til_ckpt', type=int, default=100,
                help='Time interval in seconds until checkpoint is saved.')
 p.add_argument('--steps_til_summary', type=int, default=100,
                help='Time interval in seconds until tensorboard summary is saved.')
@@ -40,7 +40,6 @@ opt = p.parse_args()
 
 sdf_dataset = dataio.PointCloud(opt.point_cloud_path, on_surface_points=opt.batch_size)
 dataloader = DataLoader(sdf_dataset, shuffle=True, batch_size=1, pin_memory=True, num_workers=0)
-
 # Define the model.
 if opt.model_type == 'nerf':
     model = modules.SingleBVPNet(type='relu', mode='nerf', in_features=3)
