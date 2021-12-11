@@ -27,7 +27,7 @@ p.add_argument('--mode', type=str, default='mlp',
                help='Options are "mlp" or "nerf"')
 p.add_argument('--resolution', type=int, default=1600)
 p.add_argument('--latvec_cnt',type=int, default=2)
-p.add_argument('--explicit_latvec',type=float,default=None)
+p.add_argument('--interpolation',type=float,default=None)
 
 opt = p.parse_args()
 
@@ -56,4 +56,4 @@ utils.cond_mkdir(root_path)
 
 epoch=opt.checkpoint_path.split('/')[-1].split('.')[0].split('_')[2]
 
-sdf_meshing.create_multi_mesh(sdf_decoder, shapecnt=opt.latvec_cnt,outfile_prefix=os.path.join(root_path, 'epoch_{}_res_{}'.format(epoch,opt.resolution)), N=opt.resolution)
+sdf_meshing.create_multi_mesh(sdf_decoder, interpolation=opt.interpolation,shapecnt=opt.latvec_cnt,outfile_prefix=os.path.join(root_path, 'epoch_{}_res_{}'.format(epoch,opt.resolution)), N=opt.resolution)
