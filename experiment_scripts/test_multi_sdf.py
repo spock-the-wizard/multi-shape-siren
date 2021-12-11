@@ -27,6 +27,7 @@ p.add_argument('--mode', type=str, default='mlp',
                help='Options are "mlp" or "nerf"')
 p.add_argument('--resolution', type=int, default=1600)
 p.add_argument('--latvec_cnt',type=int, default=2)
+p.add_argument('--explicit_latvec',type=float,default=None)
 
 opt = p.parse_args()
 
