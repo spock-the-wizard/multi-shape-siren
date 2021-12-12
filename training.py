@@ -51,8 +51,7 @@ def train_deepsdf(model, latvecs, train_dataloader, epochs, lr, steps_til_summar
                            np.array(train_losses))
 
             for step, (shapeidx, model_input, gt) in enumerate(train_dataloader):
-
-
+                model_input = {key: value.cuda() for key, value in model_input.items()}
                 gt = {key: value.cuda() for key, value in gt.items()}
 
                 if double_precision:
@@ -64,7 +63,9 @@ def train_deepsdf(model, latvecs, train_dataloader, epochs, lr, steps_til_summar
                 train_loss=0
                 for i in range(len(coords)):
                     co=coords[i]
-                    model_output=model(co,latvecs(torch.LongTensor([i])))
+                    em_input=torch.LongTensor([i]).cuda()
+                    
+                    model_output=model(co,latvecs(em_input))
                     gt_={key:value[i] for key,value in gt.items()}
                     losses=loss_fn(model_output,gt_)
                     for loss_name, loss in losses.items():
@@ -76,7 +77,8 @@ def train_deepsdf(model, latvecs, train_dataloader, epochs, lr, steps_til_summar
 
                         writer.add_scalar(loss_name, single_loss, total_steps)
                         train_loss += single_loss
-
+                
+                train_loss=train_loss/len(coords)
                 train_losses.append(train_loss.item())
                 writer.add_scalar("total_train_loss", train_loss, total_steps)
                 

@@ -86,7 +86,7 @@ class PointClouds(Dataset):
 
             self.coords.append(coords)
             self.normals.append(normals)
-            if self.shapecnt==4:
+            if self.shapecnt==20:
                 return
 
     def __len__(self):
@@ -128,13 +128,13 @@ in_features=latent_size+3
 
 # Define the model.
 model = modules.DeepSDF(type=opt.model_type, in_features=in_features)
-#model.cuda()
+model.cuda()
 
 
 # =========================================================
 # TODO: enable multi gpu support
 print("training with {} GPU(s)".format(torch.cuda.device_count()))
-model=nn.DataParallel(model)
+#model=nn.DataParallel(model)
 
 #num_samp_per_scene = specs["SamplesPerScene"]
 #scene_per_batch = specs["ScenesPerBatch"]
@@ -153,6 +153,7 @@ torch.nn.init.normal_(
     0.0,
     code_initstd / math.sqrt(latent_size),
 )
+latvecs.cuda()
 
 
 # Define the loss
