@@ -8,9 +8,132 @@ import plyfile
 import skimage.measure
 import time
 import torch
+import os
+
+
+def create_deepsdf_mesh(
+    decoder, exp_folder, shapecnt, epoch,interpolation=None, N=256, max_batch=64 ** 3, offset=None, scale=None
+):
+    cnt=0
+    decoder.eval()
+
+    # NOTE: the voxel_origin is actually the (bottom, left, down) corner, not the middle
+    voxel_origin = [-1, -1, -1]
+    voxel_size = 2.0 / (N - 1)
+
+    
+    overall_index = torch.arange(0, N ** 3, 1, out=torch.LongTensor())
+
+    mesh_folder=os.path.join(exp_folder,'TrainingMeshes',epoch)
+    if not os.path.isdir(mesh_folder):
+        os.makedirs(mesh_folder)
+    # TODO: implement interpolation for deepsdf 
+    if interpolation is not None:
+        start = time.time()
+        ply_filename='{}_shape_{}'.format(outfile_prefix,interpolation)
+        samples = torch.zeros(N ** 3, 4)
+
+        # transform first 3 columns
+        # to be the x, y, z index
+        samples[:, 2] = overall_index % N
+        samples[:, 1] = (overall_index.long() / N) % N
+        samples[:, 0] = ((overall_index.long() / N) / N) % N
+
+        # transform first 3 columns
+        # to be the x, y, z coordinate
+        samples[:, 0] = (samples[:, 0] * voxel_size) + voxel_origin[2]
+        samples[:, 1] = (samples[:, 1] * voxel_size) + voxel_origin[1]
+        samples[:, 2] = (samples[:, 2] * voxel_size) + voxel_origin[0]
+
+        num_samples = N ** 3
+
+        samples.requires_grad = False
+
+        head = 0
+
+        while head < num_samples:
+            print(head)
+            sample_subset = samples[head : min(head + max_batch, num_samples), 0:3]
+            shape_tensor=[[interpolation]]*len(sample_subset)
+            sample_subset = torch.FloatTensor(np.concatenate((shape_tensor,sample_subset),axis=1)).cuda()
+            samples[head : min(head + max_batch, num_samples), 3] = (
+                decoder(sample_subset)
+                .squeeze()#.squeeze(1)
+                .detach()
+                .cpu()
+            )
+            head += max_batch
+
+        sdf_values = samples[:, 3]
+        sdf_values = sdf_values.reshape(N, N, N)
+
+        end = time.time()
+        print("shape %d sampling takes: %f" % (interpolation,end - start))
+
+        convert_sdf_samples_to_ply(
+            sdf_values.data.cpu(),
+            voxel_origin,
+            voxel_size,
+            ply_filename + ".ply",
+            offset,
+            scale,
+        )
+    else:
+        import pdb;pdb.set_trace()
+        for shapeidx in range(shapecnt):
+            start = time.time()
+            ply_filename='{}/shape{}'.format(mesh_folder,shapeidx)
+            samples = torch.zeros(N ** 3, 4)
+
+            # transform first 3 columns
+            # to be the x, y, z index
+            samples[:, 2] = overall_index % N
+            samples[:, 1] = (overall_index.long() / N) % N
+            samples[:, 0] = ((overall_index.long() / N) / N) % N
+
+            # transform first 3 columns
+            # to be the x, y, z coordinate
+            samples[:, 0] = (samples[:, 0] * voxel_size) + voxel_origin[2]
+            samples[:, 1] = (samples[:, 1] * voxel_size) + voxel_origin[1]
+            samples[:, 2] = (samples[:, 2] * voxel_size) + voxel_origin[0]
+
+            num_samples = N ** 3
+
+            samples.requires_grad = False
+
+            head = 0
+            while head < num_samples:
+                print(head)
+                sample_subset = samples[head : min(head + max_batch, num_samples), 0:3].cuda()
+                #shape_tensor=[[shapeidx]]*len(sample_subset)
+                #sample_subset = torch.FloatTensor(np.concatenate((shape_tensor,sample_subset),axis=1)).cuda()
+                samples[head : min(head + max_batch, num_samples), 3] = (
+                    decoder(sample_subset,shapeidx)
+                    .squeeze()#.squeeze(1)
+                    .detach()
+                    .cpu()
+                )
+                head += max_batch
+
+            sdf_values = samples[:, 3]
+            sdf_values = sdf_values.reshape(N, N, N)
+
+            end = time.time()
+            print("shape %d sampling takes: %f" % (shapeidx,end - start))
+
+            convert_sdf_samples_to_ply(
+                sdf_values.data.cpu(),
+                voxel_origin,
+                voxel_size,
+                ply_filename + ".ply",
+                offset,
+                scale,
+            )
+
+
 
 def create_multi_mesh(
-    decoder, interpolation, shapecnt, outfile_prefix,N=256, max_batch=64 ** 3, offset=None, scale=None
+    decoder, shapecnt, outfile_prefix,interpolation=None, N=256, max_batch=64 ** 3, offset=None, scale=None
 ):
 
     decoder.eval()
